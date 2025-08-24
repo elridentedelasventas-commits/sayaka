@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>pa la hermosa de sayaka</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg1: #0f0c29;
+      --bg2: #302b63;
+      --bg3: #24243e;
+      --card: rgba(255,255,255,.10);
+      --card-2: rgba(255,255,255,.18);
+      --accent: #ff69b4;
+      --accent-2: #ffd1e8;
+      --text: #f6f6f9;
+      --muted: #cfd2ff;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: var(--text);
+      background: #0a0a0f;
+      overflow:hidden;
+    }
+
+    .sky{position:fixed; inset:0; pointer-events:none; overflow:hidden;}
+    canvas#particles{
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .wrap{position:relative; height:100%; display:grid; place-items:center; padding:24px; z-index: 2;}
+
+    .card{
+      width:min(720px, 92vw);
+      background: linear-gradient(180deg, var(--card), var(--card-2));
+      border: 1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(12px) saturate(120%);
+      border-radius: 28px;
+      padding: clamp(18px, 3.5vw, 32px);
+      box-shadow: var(--shadow);
+      position:relative;
+      overflow:hidden;
+      isolation:isolate;
+    }
+
+    .glow{
+      position:absolute; inset:-20%; z-index:-1; opacity:.5;
+      background: radial-gradient(400px 220px at 20% 15%, rgba(255,182,193,.35), transparent 60%),
+                  radial-gradient(320px 200px at 80% 10%, rgba(135,206,250,.18), transparent 60%);
+      filter: blur(40px);
+    }
+
+    h1{margin:0 0 4px 0; font-weight:700; letter-spacing:.2px;font-size: clamp(22px, 4.2vw, 34px);}
+    .subtitle{margin:0 0 14px 0; opacity:.9; font-weight:300; font-size: clamp(13px, 2.6vw, 16px); color: var(--muted);}
+
+    .message-box{
+      min-height: 120px; display:flex; align-items:center; justify-content:center;
+      background: rgba(255,255,255,.06);
+      border:1px dashed rgba(255,255,255,.22);
+      border-radius: 18px; padding: clamp(14px, 3vw, 20px);
+      text-align:center; line-height:1.5; font-size: clamp(16px, 3.6vw, 22px);
+      position:relative; overflow:hidden;
+    }
+
+    .msg{
+      display:inline-block; opacity:1; transform: translateY(0); filter: blur(0);
+      transition: all .3s ease;
+    }
+
+    .controls{display:flex; gap:12px; align-items:center; justify-content:space-between; margin-top:16px; flex-wrap:wrap}
+
+    .btn{
+      appearance:none; border:none; cursor:pointer; user-select:none;
+      background: linear-gradient(180deg, #ff8ac5, #ff5dab);
+      color:#1b1021; font-weight:700; letter-spacing:.3px;
+      padding:12px 18px; border-radius: 999px; box-shadow: 0 10px 18px rgba(255,91,171,.35);
+      transition: transform .12s ease, filter .2s ease, box-shadow .2s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.06); box-shadow: 0 12px 22px rgba(255,91,171,.45);}
+    .btn:active{ transform: translateY(0); filter: brightness(.96);}
+    .btn[disabled]{ opacity:.6; pointer-events:none;}
+
+    .ghost{background: transparent; color: var(--accent-2);border:1px solid rgba(255,255,255,.25);box-shadow: none;}
+
+    .pink-bg {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #ff69b4, #ff8ac5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease-out;
+      z-index: 997;
+    }
+    
+    .pink-bg.active {
+      opacity: 1;
+    }
+
+    .final-btn {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 998;
+      font-size: 32px;
+      padding: 16px 32px;
+      background: white;
+      color: #ff69b4;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .final-btn.show {
+      opacity: 1;
+    }
+
+    .final-btn:hover {
+      transform: translate(-50%, -50%) scale(1.05);
+      box-shadow: 0 6px 25px rgba(255, 255, 255, 0.4);
+    }
+
+    .controls.hide-controls {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .card.fade-card {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .meter{ flex:1; height:10px; background: rgba(255,255,255,.12); border-radius: 999px; overflow:hidden; min-width: 140px;}
+    .meter > span{ display:block; height:100%; width:0%; background: linear-gradient(90deg, #ff69b4, #ff8ac5, #ff5dab); transition: width .5s cubic-bezier(.16,.84,.44,1);}
+
+    .tiny{ font-size:12px; opacity:.8; }
+
+
+
+    .pulse{animation: pulse 1.3s ease-in-out 2;}
+    @keyframes pulse{0%{ transform: scale(1);}50%{ transform: scale(1.06);}100%{ transform: scale(1);}}
+
+    .foot{ margin-top:10px; text-align:center; font-size:12px; opacity:.55;}
+    a{ color: var(--accent-2); }
+
+    /* pantallita d mrd (fin)*/
+    .overlay{
+      position:fixed; inset:0; 
+      background: rgba(0,0,0,.85);
+      color: var(--text);
+      display:flex; align-items:center; justify-content:center; flex-direction:column;
+      z-index:999; opacity:0; pointer-events:none; 
+      transition: opacity .6s ease;
+      backdrop-filter: blur(8px);
+    }
+    .overlay.show{opacity:1; pointer-events:auto;}
+    
+    .overlay-card {
+      background: linear-gradient(180deg, var(--card), var(--card-2));
+      border: 1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(12px) saturate(120%);
+      border-radius: 28px;
+      padding: clamp(24px, 4vw, 40px);
+      box-shadow: var(--shadow);
+      position: relative;
+      width: min(480px, 90vw);
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .overlay-card h2 {
+      margin: 0 0 24px 0;
+      font-weight: 600;
+      font-size: clamp(24px, 4vw, 32px);
+    }
+
+    .overlay input{
+      width: 100%;
+      max-width: 320px;
+      padding: 12px 16px;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 12px;
+      font-size: 15px;
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      outline: none;
+      transition: all .2s ease;
+    }
+
+    .overlay input:focus {
+      border-color: var(--accent);
+      background: rgba(255,255,255,.12);
+      box-shadow: 0 0 0 3px rgba(255,105,180,.15);
+    }
+
+    .overlay input::placeholder {
+      color: rgba(255,255,255,.4);
+    }
+
+    .overlay button{
+      margin-top: 20px;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ff8ac5, #ff5dab);
+      color: #1b1021;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all .2s ease;
+      box-shadow: 0 10px 18px rgba(255,91,171,.35);
+    }
+
+    .overlay button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.06);
+      box-shadow: 0 12px 22px rgba(255,91,171,.45);
+    }
+
+    .overlay button:active {
+      transform: translateY(0);
+      filter: brightness(.96);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+  <div class="wrap">
+    <div class="card" id="card">
+      <div class="glow" aria-hidden="true"></div>
+      <h1>Para la PRECIOSA de Sayaka</h1>
+      <p class="subtitle">Oprime ese boton de "Toca para ver" JAJAJ</p>
+      <div class="message-box" aria-live="polite" aria-atomic="true">
+        <span id="message" class="msg"></span>
+      </div>
+      <div class="controls">
+        <button id="btn" class="btn">Toca para ver</button>
+        <div class="meter" aria-hidden="true"><span id="bar"></span></div>
+        <button id="reset" class="btn ghost" title="Volver a empezar">Reiniciar ↺</button>
+      </div>
+    </div>
+  </div>
+  <!-- Ovrline end -->
+  <div class="overlay" id="overlay">
+    <div class="overlay-card">
+      <div class="glow" aria-hidden="true"></div>
+      <h2>Aveerr, QUE TE PARECIO PS, (yo vere tu opinion JAJAJJAJSAKS)</h2>
+      <input type="text" id="opinion" placeholder="Escribe aquí tu respuesta..." />
+      <button id="send">Enviar mensaje</button>
+      <p id="status" style="margin-top:16px; font-size:14px; color: var(--muted);"></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const supabaseUrl = 'https://bgwvfqdmhsojikhaarrd.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnd3ZmcWRtaHNvamlraGFhcnJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYwMTAzMzksImV4cCI6MjA3MTU4NjMzOX0.FMv66tJn4P88CM3w1bquP4UdvNa6U7fSnlTJgYTCZWU';
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const mensajes = [
+      "OYEEEEEEEE",
+      "¿SABIAS ALGO???",
+      "TE VOY A SER 100% sincero.",
+      "(creo que me odias pero lo intentare)",
+      "LA VERDAD ESTAS BIENNN HERMOSA",
+      "BIENN PRECIOSAAA",
+      "perfectaaa",
+      "BONITAAA",
+      "YO DIRIA, que le ganas a muchas, solo que ese autestima te mata AJJAJAJAJAJAJ",
+      "EN FINNNN, eso era, espero te haya gustado AJJAJAJAJ, (me costo un monton JAJA)",
+      "BESOSSSS",
+      "PERDONA, TE LO VUELVO A REPETIR, ESTAS HERMOSA, PRECIOSA, eres bieeeeeeeen linda, y para rematar = eres una princesa. (MIA OBVIOOO), DALE AL BOTON DE FINAL BIEN PEDORRO JAJAJAJJAJA"
+    ];
+
+    const btn = document.getElementById('btn');
+    const resetBtn = document.getElementById('reset');
+    const msgEl = document.getElementById('message');
+    const bar = document.getElementById('bar');
+    const overlay = document.getElementById('overlay');
+    const opinionInput = document.getElementById('opinion');
+    const sendBtn = document.getElementById('send');
+    const statusText = document.getElementById('status');
+
+    let i = -1;
+    let typing = false;
+
+    function typeText(el, text){
+      el.textContent = '';
+      el.classList.remove('pulse');
+      typing = true;
+      const chars = [...text];
+      let idx = 0;
+      const speed = 16 + Math.random()*12;
+      const timer = setInterval(()=>{
+        el.textContent += chars[idx++];
+        if(idx >= chars.length){ 
+          clearInterval(timer); 
+          typing = false; 
+          el.classList.add('pulse');
+          // Ya no mostraremos el overlay automáticamente al terminar de escribir
+        }
+      }, speed);
+    }
+
+    function nextMessage(){
+      if(typing) return;
+      i = Math.min(i+1, mensajes.length-1);
+      typeText(msgEl, mensajes[i]);
+      const progress = ((i+1)/mensajes.length)*100;
+      bar.style.width = progress+'%';
+      if (i === mensajes.length-1) {
+        btn.textContent = 'Final bien pedorro';
+        btn.removeEventListener('click', nextMessage);
+        btn.addEventListener('click', handleFinalExpansion, { once: true });
+      } else {
+        btn.textContent = 'Siguiente';
+      }
+    }
+
+    function resetAll(){
+      i = -1; bar.style.width = '0%'; msgEl.textContent = '';
+      btn.textContent = 'Toca para ver ✨';
+      msgEl.classList.remove('pulse');
+    }
+
+
+
+    function handleFinalExpansion(e) {
+      const btn = e.target;
+      const controls = btn.closest('.controls');
+      const card = document.querySelector('.card');
+      
+      // Crear el fondo rosa
+      const pinkBg = document.createElement('div');
+      pinkBg.className = 'pink-bg';
+      document.body.appendChild(pinkBg);
+      
+      // Crear el nuevo botón de "Dale click"
+      const finalBtn = document.createElement('button');
+      finalBtn.className = 'final-btn';
+      finalBtn.textContent = 'Dale click';
+      document.body.appendChild(finalBtn);
+      
+      // Activar el fondo rosa y desvanecer la tarjeta
+      requestAnimationFrame(() => {
+        pinkBg.classList.add('active');
+        controls.classList.add('hide-controls');
+        card.classList.add('fade-card');
+        
+        // Mostrar el botón "Dale click" después de que aparezca el fondo
+        setTimeout(() => {
+          finalBtn.classList.add('show');
+        }, 400);
+      });
+      
+      // Configurar el click del botón final
+      finalBtn.addEventListener('click', () => {
+        finalBtn.style.opacity = '0';
+        pinkBg.style.opacity = '0';
+        setTimeout(() => {
+          finalBtn.remove();
+          pinkBg.remove();
+          showOverlay();
+        }, 500);
+      }, { once: true });
+    }
+
+    function showOverlay(){
+      overlay.classList.add('show');
+    }
+
+    async function sendOpinion(){
+      const text = opinionInput.value.trim();
+      if(!text){statusText.textContent = 'Que opinas JAJAJAJAJAAJJAJA'; return;}
+      statusText.textContent = 'Enviando...';
+      const { data, error } = await supabase.from('opiniones').insert([{ mensaje: text }]);
+      if(error){statusText.textContent = 'Error: '+error.message;}
+      else{statusText.textContent = 'YO leere eso ehh'; opinionInput.value='';}
+    }
+
+    btn.addEventListener('click', nextMessage);
+    resetBtn.addEventListener('click', resetAll);
+    sendBtn.addEventListener('click', sendOpinion);
+
+  // particles xd
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+    
+    // config del culo
+    const particleCount = 100;
+    const connectionDistance = 150;
+    const mouseRadius = 200;
+    
+    let mouseX = width / 2;
+    let mouseY = height / 2;
+    
+    class Particle {
+      constructor() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = Math.random() * 0.5 - 0.25;
+        this.vy = Math.random() * 0.5 - 0.25;
+        this.radius = 2;
+      }
+    
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > width) this.vx *= -1;
+        if (this.y < 0 || this.y > height) this.vy *= -1;
+    
+        const dx = mouseX - this.x;
+        const dy = mouseY - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+    
+        if (dist < mouseRadius) {
+          const force = (mouseRadius - dist) / mouseRadius;
+          this.vx -= (dx / dist) * force * 0.02;
+          this.vy -= (dy / dist) * force * 0.02;
+        }
+      }
+    }
+    
+    const particles = Array.from({ length: particleCount }, () => new Particle());
+    
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+
+      particles.forEach(particle => {
+        particle.update();
+        particles.forEach(other => {
+          const dx = particle.x - other.x;
+          const dy = particle.y - other.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+    
+          if (dist < connectionDistance) {
+            ctx.beginPath();
+            ctx.moveTo(particle.x, particle.y);
+            ctx.lineTo(other.x, other.y);
+            const alpha = 1 - (dist / connectionDistance);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.15})`;
+            ctx.stroke();
+          }
+        });
+    
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fill();
+      });
+    
+      requestAnimationFrame(animate);
+    }
+    
+    // Event listeners xdd
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+    
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+    
+    // a1
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches[0]) {
+        mouseX = e.touches[0].clientX;
+        mouseY = e.touches[0].clientY;
+      }
+    });
+    
+    animate();
+
+    // coras
+    function createHeartAtPosition(x, y) {
+      const h = document.createElement('div');
+      h.className = 'heart click-heart';
+      h.textContent = Math.random() > .5 ? '❤' : '❤';
+      h.style.left = (x - 10) + 'px';
+      h.style.top = (y - 10) + 'px';
+      h.style.fontSize = '22px';
+      h.style.position = 'fixed';
+      h.style.pointerEvents = 'none';
+      h.style.animation = 'clickHeart 1s ease-out forwards';
+      document.body.appendChild(h);
+      setTimeout(() => h.remove(), 1000);
+    }
+
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes clickHeart {
+        0% { transform: scale(0.3); opacity: 1; }
+        100% { transform: scale(1.5) translateY(-20px); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Eventos para clicks y touches
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.btn, .overlay input, .overlay button')) {
+        createHeartAtPosition(e.clientX, e.clientY);
+      }
+    });
+
+    document.addEventListener('touchstart', (e) => {
+      if (!e.target.closest('.btn, .overlay input, .overlay button')) {
+        const touch = e.touches[0];
+        createHeartAtPosition(touch.clientX, touch.clientY);
+      }
+    });
+  </script>
+</body>
+</html>
