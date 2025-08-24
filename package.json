@@ -1,0 +1,14 @@
+{
+  "name": "sayaka",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Un mensaje especial para Sayaka",
+  "scripts": {
+    "start": "npx serve",
+    "build": "mkdir -p dist && cp *.html dist/ && echo 'Build completado!'",
+    "preview": "npm run build && npx serve dist"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
